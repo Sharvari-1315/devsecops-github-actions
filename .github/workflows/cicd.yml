@@ -120,4 +120,43 @@ jobs:
         tags: devsharvari/bankapp:latest
         file: ./Dockerfile
 
+  deploy_to_minikube:
+    runs-on: self-hosted
+    needs: buils_docker_image_and_push
+    steps:
+      - uses: actions/checkout@v4
 
+      # Install kubectl
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      # Install Minikube
+      - name: Install Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+      # Start Minikube with limited resources
+      - name: Start Minikube
+        run: |
+          minikube status || minikube start --driver=docker --memory=2000 --cpus=1
+
+      # Load Docker image into Minikube
+      - name: Load Docker image
+        run: minikube image load adijaiswal/bankapp:latest
+
+      # Apply Kubernetes manifests (ds.yml)
+      - name: Deploy MySQL + BankApp
+        run: kubectl apply -f ds.yml
+
+      # Wait for BankApp deployment rollout
+      - name: Wait for BankApp rollout
+        run: kubectl rollout status deployment/bankapp -n default
+
+      # Optional: List pods and services
+      - name: List pods and services
+        run: |
+          kubectl get pods -o wide
+          kubectl get svc -o wide
