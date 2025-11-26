@@ -145,7 +145,7 @@ jobs:
 
       # Load Docker image into Minikube
       - name: Load Docker image
-        run: minikube image load adijaiswal/bankapp:latest
+        run: minikube image load devsharvari/bankapp:latest
 
       # Apply Kubernetes manifests (ds.yml)
       - name: Deploy MySQL + BankApp
